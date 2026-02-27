@@ -2,7 +2,6 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main", "master" ]
   pull_request:
 
 jobs:
@@ -10,27 +9,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: ☕ Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
-      - name: 🔍 Find and run Gradle Wrapper
+      - name: 🤖 Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🔍 Find gradlew
+        id: gradlew
         run: |
-          echo "Searching for gradlew..."
           GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
-
           if [ -z "$GRADLEW_PATH" ]; then
             echo "❌ gradlew not found"
             exit 1
           fi
-
-          echo "✅ Using gradlew at: $GRADLEW_PATH"
+          echo "GRADLEW_PATH=$GRADLEW_PATH" >> $GITHUB_ENV
           chmod +x "$GRADLEW_PATH"
-          cd "$(dirname "$GRADLEW_PATH")"
+          echo "✅ gradlew: $GRADLEW_PATH"
 
-          ./gradlew clean assembleDebug
+      - name: 🧹 Clean
+        run: |
+          cd "$(dirname "$GRADLEW_PATH")"
+          ./gradlew clean
+
+      - name: 🏗 Build Debug APK
+        run: |
+          cd "$(dirname "$GRADLEW_PATH")"
+          ./gradlew assembleDebug
+
+      - name: 📦 Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: "**/build/outputs/apk/debug/*.apk"

@@ -32,12 +32,7 @@ jobs:
           echo "GRADLEW_PATH=$GRADLEW_PATH" >> $GITHUB_ENV
           chmod +x "$GRADLEW_PATH"
           echo "✅ gradlew: $GRADLEW_PATH"
-
-      - name: 🧹 Clean
-        run: |
-          cd "$(dirname "$GRADLEW_PATH")"
-          ./gradlew app:clean
-
+          
       - name: 🏗 Build Debug APK
         run: |
           cd "$(dirname "$GRADLEW_PATH")"

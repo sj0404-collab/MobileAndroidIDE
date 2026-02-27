@@ -1,16 +1,18 @@
-name: Build Debug APK
+name: Android CI
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -18,17 +20,21 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Find gradlew
+        run: |
+          echo "Searching for gradlew..."
+          find . -name gradlew -type f
 
-      - name: Grant execute permission
-        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: |
+          GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "❌ gradlew not found"
+            exit 1
+          fi
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          echo "✅ Using gradlew at: $GRADLEW_PATH"
+          chmod +x "$GRADLEW_PATH"
+          cd "$(dirname "$GRADLEW_PATH")"
+          ./gradlew assembleDebug

@@ -23,7 +23,7 @@ jobs:
       - name: Find gradlew
         run: |
           echo "Searching for gradlew..."
-          find . -name gradlew -type f
+          find . -name gradlew
 
       - name: Build with Gradle
         run: |
